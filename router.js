@@ -5,6 +5,7 @@ const { checkUser } = require('./middlewares/user.mw');
 const router = Router();
 
 router.get('/users', UserController.getAllUsers);
+router.get('/user/:id', checkUser, UserController.getUser);
 router.post('/user', UserController.createUser);
 router.patch('/user/:id', UserController.updateUser);
 router.patch('/user-v2/:id', checkUser, UserController.updateUserInstance);
