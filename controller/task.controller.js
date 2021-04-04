@@ -24,3 +24,27 @@ module.exports.getUserTasks = async (req, res, next) => {
     next(err);
   }
 };
+
+module.exports.getUserTask = async (req, res, next) => {
+  try {
+    const { userInstance } = req;
+    const [firstTask] = await userInstance.getTasks();
+
+    res.send({ data: firstTask });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+// module.exports.getUserTasksAmount = async (req, res, next) => {
+//   try {
+//     const { userInstance } = req;
+//     const taskAmount = await userInstance.countTasks();
+//     console.log(taskAmount);
+//     res.status(200).send({taskAmount});
+//   } catch (err) {
+//     next(err);
+//   }
+// };

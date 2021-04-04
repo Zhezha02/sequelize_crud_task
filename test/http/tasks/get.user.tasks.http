@@ -1,1 +1,1 @@
-GET http://localhost:3000/api/user/100/task
+GET http://localhost:3000/api/user/100/tasks
