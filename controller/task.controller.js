@@ -25,7 +25,7 @@ module.exports.getUserTasks = async (req, res, next) => {
   }
 };
 
-module.exports.getUserTask = async (req, res, next) => {
+module.exports.getTaskByUser = async (req, res, next) => {
   try {
     const { userInstance } = req;
     const [firstTask] = await userInstance.getTasks();
@@ -35,8 +35,14 @@ module.exports.getUserTask = async (req, res, next) => {
     next(err);
   }
 };
-
-
+module.exports.getTaskById = async (req, res, next) => {
+  try {
+    const { taskInstance } = req;
+    res.status(200).send({ data: taskInstance });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // module.exports.getUserTasksAmount = async (req, res, next) => {
 //   try {
@@ -48,3 +54,43 @@ module.exports.getUserTask = async (req, res, next) => {
 //     next(err);
 //   }
 // };
+
+module.exports.updateTask = async (req, res, next) => {
+  try {
+    const { taskInstance, body } = req;
+
+    const updatedTaskInstance = await taskInstance.update(body, {
+      returning: true,
+    });
+
+    res.status(200).send({ data: updatedTaskInstance });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports.deleteTaskById = async (req, res, next) => {
+  try {
+    const { taskInstance } = req;
+    const result = await taskInstance.destroy();
+    console.log(result);
+    res.send({ data: taskInstance });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports.deleteAllUserTasks = async (req, res, next) => {
+  try {
+    const {
+      userInstance,
+      params: { id },
+    } = req;
+    const userTasks = await userInstance.getTasks();
+    const result = await Task.destroy({ where: { user_id: id } });
+    console.log(result);
+    res.send({ data: userTasks });
+  } catch (err) {
+    next(err);
+  }
+};
