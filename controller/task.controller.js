@@ -18,9 +18,11 @@ module.exports.createTask = async (req, res, next) => {
 
 module.exports.getUserTasks = async (req, res, next) => {
   try {
-    const { userInstance } = req;
+    const { userInstance, pagination = {} } = req;
 
-    const tasks = await userInstance.getTasks();
+    const tasks = await userInstance.getTasks({
+      ...pagination,
+    });
 
     if (!tasks.length) {
       return next(createError(404, 'User without tasks'));
