@@ -1,12 +1,15 @@
+const createError = require('http-errors');
 const { Task } = require('../models');
 
 module.exports.createTask = async (req, res, next) => {
   try {
     const { body, userInstance } = req;
 
-    // const task = await Task.create({ ...body, userId: id });
     const task = await userInstance.createTask(body);
 
+    if (!task) {
+      return next(createError(400, "Task can't be created"));
+    }
     res.send({ data: task });
   } catch (err) {
     next(err);
@@ -19,51 +22,48 @@ module.exports.getUserTasks = async (req, res, next) => {
 
     const tasks = await userInstance.getTasks();
 
+    if (!tasks.length) {
+      return next(createError(404, 'User without tasks'));
+    }
+
     res.send({ data: tasks });
   } catch (err) {
     next(err);
   }
 };
 
-module.exports.getTaskByUser = async (req, res, next) => {
-  try {
-    const { userInstance } = req;
-    const [firstTask] = await userInstance.getTasks();
-
-    res.send({ data: firstTask });
-  } catch (err) {
-    next(err);
-  }
-};
 module.exports.getTaskById = async (req, res, next) => {
   try {
-    const { taskInstance } = req;
-    res.status(200).send({ data: taskInstance });
+    const {
+      params: { taskId },
+    } = req;
+    const task = await Task.findByPk(taskId);
+
+    if (!task) {
+      return next(createError(404, 'Task not found'));
+    }
+    res.status(200).send({ data: task });
   } catch (err) {
     next(err);
   }
 };
-
-// module.exports.getUserTasksAmount = async (req, res, next) => {
-//   try {
-//     const { userInstance } = req;
-//     const taskAmount = await userInstance.countTasks();
-//     console.log(taskAmount);
-//     res.status(200).send({taskAmount});
-//   } catch (err) {
-//     next(err);
-//   }
-// };
 
 module.exports.updateTask = async (req, res, next) => {
   try {
-    const { taskInstance, body } = req;
+    const {
+      params: { taskId },
+      body,
+    } = req;
 
-    const updatedTaskInstance = await taskInstance.update(body, {
+    const [, [updatedTask]] = await Task.update(body, {
+      where: { id: taskId },
       returning: true,
     });
 
-    res.status(200).send({ data: updatedTaskInstance });
+    if (!updatedTask) {
+      return next(createError(400, "task can't be updated"));
+    }
+    res.status(200).send({ data: updatedTask });
   } catch (err) {
     next(err);
   }
@@ -71,10 +71,15 @@ module.exports.updateTask = async (req, res, next) => {
 
 module.exports.deleteTaskById = async (req, res, next) => {
   try {
-    const { taskInstance } = req;
-    const result = await taskInstance.destroy();
-    console.log(result);
-    res.send({ data: taskInstance });
+    const {
+      params: { taskId },
+    } = req;
+    const result = await Task.destroy({ where: { id: taskId } });
+
+    if (result !== 1) {
+      return next(createError(404, "Task can't be found"));
+    }
+    res.send({ data: result });
   } catch (err) {
     next(err);
   }
@@ -83,13 +88,13 @@ module.exports.deleteTaskById = async (req, res, next) => {
 module.exports.deleteAllUserTasks = async (req, res, next) => {
   try {
     const {
-      userInstance,
-      params: { id },
+      params: { userId },
     } = req;
-    const userTasks = await userInstance.getTasks();
-    const result = await Task.destroy({ where: { user_id: id } });
-    console.log(result);
-    res.send({ data: userTasks });
+    const result = await Task.destroy({ where: { id: userId } });
+    if (!result) {
+      return next(createError(404, 'Tasks not found'));
+    }
+    res.send({ data: result });
   } catch (err) {
     next(err);
   }
